@@ -44,12 +44,21 @@ jQuery(document).ready(function($) {
     // Store parameters as cookies
     var storedParams = {};
 
+    // Store URL parameters
     urlParams.forEach(function(value, key) {
         if (trackAll || paramsToTrack.includes(key)) {
             setCookie('upt_' + key, value, cookieLifetime);
             storedParams[key] = value;
         }
     });
+
+    // Store current URL and referrer
+    setCookie('upt_current_url', window.location.href, cookieLifetime);
+    storedParams['current_url'] = window.location.href;
+
+    var referrer = document.referrer || 'Direct';
+    setCookie('upt_referrer', referrer, cookieLifetime);
+    storedParams['referrer'] = referrer;
 
     // Autofill form fields from cookies
     Object.keys(mappings).forEach(function(fieldSelector) {
