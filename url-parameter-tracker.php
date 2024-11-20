@@ -182,12 +182,12 @@ function upt_param_field_mapping_render() {
     <p class="description">
         Define how tracked parameters are mapped to form fields. Use one mapping per line in the format:<br><br>
         <code>parameter=field_selector</code> or<br>
-        <code>[Label Text]parameter=field_selector</code> for labeled values.<br><br>
+        <code>{Label Text}parameter=field_selector</code> for labeled values.<br><br>
         The users current page and referrer page data are stored in the following values:<br>
         <code>current_url</code> and <code>referrer</code><br><br>
         Examples:<br>
         <code>utm_source,utm_medium,utm_campaign=#all-utms</code><br>
-        <code>[Source: ]utm_source,[Medium: ]utm_medium=#utm-parameters</code><br><br>
+        <code>{Source: }utm_source,{Medium: }utm_medium=#utm-parameters</code><br><br>
         In the first example, the values of <code>utm_source</code>, <code>utm_medium</code>, and <code>utm_campaign</code> are inserted into the field with ID <code>all-utms</code>.<br>
         In the second example, labels are added before the values.
     </p>

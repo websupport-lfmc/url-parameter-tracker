@@ -51,12 +51,12 @@
      ```
      or with labels:
      ```
-     [Label Text]parameter=field_selector
+     {Label Text}parameter=field_selector
      ```
    - **Examples**:
      ```
      utm_source,utm_medium,utm_campaign=#all-utms
-     [Source: ]utm_source,[Medium: ]utm_medium=#utm-parameters
+     {Source: }utm_source,{Medium: }utm_medium=#utm-parameters
      ```
      - In the first example, values of `utm_source`, `utm_medium`, and `utm_campaign` are inserted into the field with ID `all-utms`.
      - In the second example, labels are added before the values.

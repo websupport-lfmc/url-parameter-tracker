@@ -10,7 +10,7 @@ jQuery(document).ready(function($) {
     if (paramFieldMapping) {
         paramFieldMapping.split('\n').forEach(function(line) {
             var parts = line.split('=');
-            if (parts.length == 2) {
+            if (parts.length === 2) {
                 var params = parts[0].split(',').map(function(p) { return p.trim(); });
                 var fieldSelector = parts[1].trim();
                 mappings[fieldSelector] = params;
@@ -23,20 +23,20 @@ jQuery(document).ready(function($) {
         var expires = '';
         if (days) {
             var date = new Date();
-            date.setTime(date.getTime() + (days*24*60*60*1000));
+            date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000));
             expires = "; expires=" + date.toUTCString();
         }
-        document.cookie = name + "=" + encodeURIComponent(value)  + expires + "; path=/";
+        document.cookie = name + "=" + encodeURIComponent(value) + expires + "; path=/";
     }
 
     // Function to get cookie
     function getCookie(name) {
         var nameEQ = name + "=";
         var ca = document.cookie.split(';');
-        for(var i=0;i < ca.length;i++) {
+        for(var i = 0; i < ca.length; i++) {
             var c = ca[i];
-            while (c.charAt(0)==' ') c = c.substring(1,c.length);
-            if (c.indexOf(nameEQ) == 0) return decodeURIComponent(c.substring(nameEQ.length,c.length));
+            while (c.charAt(0) === ' ') c = c.substring(1, c.length);
+            if (c.indexOf(nameEQ) === 0) return decodeURIComponent(c.substring(nameEQ.length, c.length));
         }
         return null;
     }
@@ -69,10 +69,10 @@ jQuery(document).ready(function($) {
             var label = '';
             var paramName = paramWithLabel;
 
-            // Check for label in square brackets
-            var labelMatch = paramWithLabel.match(/^\[(.*?)\](.*)$/);
+            // Check for label in curly braces
+            var labelMatch = paramWithLabel.match(/^\{(.*?)\}(.*)$/);
             if (labelMatch) {
-                label = labelMatch[1]; // Text inside square brackets
+                label = labelMatch[1]; // Text inside curly braces
                 paramName = labelMatch[2].trim(); // Parameter name after label
             }
 
