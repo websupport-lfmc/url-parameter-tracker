@@ -3,7 +3,7 @@
 Plugin Name: URL Parameter Tracker
 Description: Tracks URL parameters and autofills them into Contact Form 7 forms.
 Version: 1.0
-Author: Law Firm Marketing Canada
+Author: LFMC
 */
 
 // Exit if accessed directly
