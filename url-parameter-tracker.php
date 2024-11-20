@@ -333,7 +333,7 @@ function upt_options_page()
 <?php
 }
 
-// Function to display the session data page
+// Function to display the session data page with pagination
 function upt_session_data_page()
 {
 ?>
@@ -361,30 +361,76 @@ function upt_session_data_page()
 
         <br>
 
+        <?php
+        // Pagination parameters
+        $items_per_page = 10; // Number of items per page
+        $current_page = isset($_GET['paged']) && is_numeric($_GET['paged']) ? intval($_GET['paged']) : 1;
+        $offset = ($current_page - 1) * $items_per_page;
+
+        global $wpdb;
+        $table_name = $wpdb->prefix . 'upt_sessions';
+
+        // Get total number of items
+        $total_items = $wpdb->get_var("SELECT COUNT(*) FROM $table_name");
+
+        // Calculate total pages
+        $total_pages = ceil($total_items / $items_per_page);
+
+        // Fetch items for current page
+        $results = $wpdb->get_results($wpdb->prepare(
+            "SELECT * FROM $table_name ORDER BY timestamp DESC LIMIT %d OFFSET %d",
+            $items_per_page,
+            $offset
+        ));
+        ?>
+
+        <!-- Pagination above the table -->
+        <?php if ($total_pages > 1) : ?>
+            <div class="tablenav top">
+                <div class="tablenav-pages">
+                    <?php
+                    $pagination_args = array(
+                        'base'      => add_query_arg('paged', '%#%'),
+                        'format'    => '',
+                        'prev_text' => __('&laquo;'),
+                        'next_text' => __('&raquo;'),
+                        'total'     => $total_pages,
+                        'current'   => $current_page,
+                        'type'      => 'plain',
+                    );
+
+                    // Adjust pagination base if using pretty permalinks
+                    if ($GLOBALS['wp_rewrite']->using_permalinks()) {
+                        $pagination_args['base'] = user_trailingslashit(remove_query_arg('paged', get_pagenum_link(1)), 'paged') . '%_%';
+                        $pagination_args['format'] = 'page/%#%/';
+                    }
+
+                    echo paginate_links($pagination_args);
+                    ?>
+                </div>
+            </div>
+        <?php endif; ?>
+
         <!-- Session Data Table -->
-        <table class="widefat fixed" cellspacing="0">
+        <table class="widefat fixed striped" cellspacing="0">
             <thead>
                 <tr>
-                    <th>User IP</th>
-                    <th>Parameters</th>
-                    <th>Timestamp</th>
+                    <th scope="col" class="manage-column">User IP</th>
+                    <th scope="col" class="manage-column">Parameters</th>
+                    <th scope="col" class="manage-column">Timestamp</th>
                 </tr>
             </thead>
             <tbody>
                 <?php
-                // Fetch session data from database
-                global $wpdb;
-                $table_name = $wpdb->prefix . 'upt_sessions';
-                $results = $wpdb->get_results("SELECT * FROM $table_name ORDER BY timestamp DESC");
                 if ($results) {
                     foreach ($results as $row) {
                         $parameters = esc_html($row->parameters);
                         $user_ip = esc_html($row->user_ip);
                         $timestamp = esc_html($row->timestamp);
                         echo "<tr>
-                                <td style='padding:8px 25px;vertical-align: middle;border-bottom: solid 2px #f8f8f8;'>{$user_ip}</td>
-                                <td style='overflow-x: auto;padding:8px 25px;vertical-align: middle;border-bottom: solid 2px #f8f8f8;'><pre>{$parameters}</pre></td>
-                                <td style='padding:8px 25px;vertical-align: middle;border-bottom: solid 2px #f8f8f8;'>{$timestamp}</td>
+                                <td>{$user_ip}</td>
+                                <td><pre>{$parameters}</pre></td>
+                                <td>{$timestamp}</td>
                               </tr>";
                     }
                 } else {
@@ -393,6 +439,19 @@ function upt_session_data_page()
                 ?>
             </tbody>
         </table>
+
+        <!-- Pagination below the table -->
+        <?php if ($total_pages > 1) : ?>
+            <div class="tablenav bottom">
+                <div class="tablenav-pages">
+                    <?php
+                    // Reuse the same pagination arguments
+                    echo paginate_links($pagination_args);
+                    ?>
+                </div>
+            </div>
+        <?php endif; ?>
+
     </div>
 <?php
 }
