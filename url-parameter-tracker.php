@@ -429,7 +429,7 @@ function upt_session_data_page()
                         $timestamp = esc_html($row->timestamp);
                         echo "<tr>
                                 <td>{$user_ip}</td>
-                                <td><pre>{$parameters}</pre></td>
+                                <td style='overflow-x:auto'><pre>{$parameters}</pre></td>
                                 <td>{$timestamp}</td>
                               </tr>";
                     }
