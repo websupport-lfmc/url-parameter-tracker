@@ -1,8 +1,8 @@
 <?php
 /*
 Plugin Name: URL Parameter Tracker
-Description: Tracks URL parameters and autofills them into Contact Form 7 forms.
-Version: 1.0.2
+Description: Tracks URL parameters and autofills them into forms.
+Version: 1.0.3
 Author: LFMC
 */
 
@@ -341,117 +341,49 @@ function upt_session_data_page()
         <h1>User Session Data</h1>
         <p>This table displays the session data collected from users who visited your site with tracked URL parameters.</p>
 
-        <!-- Display messages if any -->
         <?php
-        if (isset($_GET['upt_message'])) {
-            if ($_GET['upt_message'] == 'deleted') {
-                echo '<div class="updated notice is-dismissible"><p>All session data has been deleted.</p></div>';
-            } elseif ($_GET['upt_message'] == 'error') {
-                echo '<div class="error notice is-dismissible"><p>Security check failed. Please try again.</p></div>';
-            }
-        }
-        ?>
-
-        <!-- Delete All Session Data Form -->
-        <form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>">
-            <?php wp_nonce_field('upt_delete_session_data_action', 'upt_delete_session_data_nonce'); ?>
-            <input type="hidden" name="action" value="upt_delete_session_data">
-            <input type="submit" name="delete_session_data" class="button button-secondary" value="Delete All Session Data" onclick="return confirm('Are you sure you want to delete all session data? This action cannot be undone.');">
-        </form>
-
-        <br>
-
-        <?php
-        // Pagination parameters
-        $items_per_page = 10; // Number of items per page
-        $current_page = isset($_GET['paged']) && is_numeric($_GET['paged']) ? intval($_GET['paged']) : 1;
-        $offset = ($current_page - 1) * $items_per_page;
-
         global $wpdb;
         $table_name = $wpdb->prefix . 'upt_sessions';
 
-        // Get total number of items
-        $total_items = $wpdb->get_var("SELECT COUNT(*) FROM $table_name");
-
-        // Calculate total pages
-        $total_pages = ceil($total_items / $items_per_page);
-
-        // Fetch items for current page
-        $results = $wpdb->get_results($wpdb->prepare(
-            "SELECT * FROM $table_name ORDER BY timestamp DESC LIMIT %d OFFSET %d",
-            $items_per_page,
-            $offset
-        ));
+        // Fetch all session data
+        $results = $wpdb->get_results("SELECT * FROM $table_name ORDER BY last_touch DESC");
         ?>
-
-        <!-- Pagination above the table -->
-        <?php if ($total_pages > 1) : ?>
-            <div class="tablenav top">
-                <div class="tablenav-pages">
-                    <?php
-                    $pagination_args = array(
-                        'base'      => add_query_arg('paged', '%#%'),
-                        'format'    => '',
-                        'prev_text' => __('&laquo;'),
-                        'next_text' => __('&raquo;'),
-                        'total'     => $total_pages,
-                        'current'   => $current_page,
-                        'type'      => 'plain',
-                    );
-
-                    // Adjust pagination base if using pretty permalinks
-                    if ($GLOBALS['wp_rewrite']->using_permalinks()) {
-                        $pagination_args['base'] = user_trailingslashit(remove_query_arg('paged', get_pagenum_link(1)), 'paged') . '%_%';
-                        $pagination_args['format'] = 'page/%#%/';
-                    }
-
-                    echo paginate_links($pagination_args);
-                    ?>
-                </div>
-            </div>
-        <?php endif; ?>
 
         <!-- Session Data Table -->
         <table class="widefat fixed striped" cellspacing="0">
             <thead>
                 <tr>
                     <th scope="col" class="manage-column">User IP</th>
-                    <th scope="col" class="manage-column">Parameters</th>
-                    <th scope="col" class="manage-column">Timestamp</th>
+                    <th scope="col" class="manage-column">First Touch</th>
+                    <th scope="col" class="manage-column">First Touch Parameters</th>
+                    <th scope="col" class="manage-column">Last Touch</th>
+                    <th scope="col" class="manage-column">Last Touch Parameters</th>
                 </tr>
             </thead>
             <tbody>
                 <?php
                 if ($results) {
                     foreach ($results as $row) {
-                        $parameters = esc_html($row->parameters);
                         $user_ip = esc_html($row->user_ip);
-                        $timestamp = esc_html($row->timestamp);
+                        $first_touch = esc_html($row->first_touch);
+                        $first_touch_parameters = esc_html($row->first_touch_parameters);
+                        $last_touch = esc_html($row->last_touch);
+                        $last_touch_parameters = esc_html($row->last_touch_parameters);
+
                         echo "<tr>
-                                <td>{$user_ip}</td>
-                                <td style='overflow-x:auto'><pre>{$parameters}</pre></td>
-                                <td>{$timestamp}</td>
+                                <td style='overflow-x:auto;'>{$user_ip}</td>
+                                <td style='overflow-x:auto;'>{$first_touch}</td>
+                                <td style='overflow-x:auto;'><pre>{$first_touch_parameters}</pre></td>
+                                <td style='overflow-x:auto;'>{$last_touch}</td>
+                                <td style='overflow-x:auto;'><pre>{$last_touch_parameters}</pre></td>
                               </tr>";
                     }
                 } else {
-                    echo "<tr><td colspan='3'>No session data available.</td></tr>";
+                    echo "<tr><td colspan='5'>No session data available.</td></tr>";
                 }
                 ?>
             </tbody>
         </table>
-
-        <!-- Pagination below the table -->
-        <?php if ($total_pages > 1) : ?>
-            <div class="tablenav bottom">
-                <div class="tablenav-pages">
-                    <?php
-                    // Reuse the same pagination arguments
-                    echo paginate_links($pagination_args);
-                    ?>
-                </div>
-            </div>
-        <?php endif; ?>
-
     </div>
 <?php
 }
@@ -468,9 +400,12 @@ function upt_create_sessions_table()
     $sql = "CREATE TABLE IF NOT EXISTS $table_name (
         id mediumint(9) NOT NULL AUTO_INCREMENT,
         user_ip varchar(100) DEFAULT '' NOT NULL,
-        parameters text NOT NULL,
-        timestamp datetime DEFAULT CURRENT_TIMESTAMP NOT NULL,
-        PRIMARY KEY  (id)
+        first_touch datetime DEFAULT NULL,
+        last_touch datetime DEFAULT NULL,
+        first_touch_parameters text NOT NULL,
+        last_touch_parameters text NOT NULL,
+        PRIMARY KEY  (id),
+        UNIQUE KEY unique_ip (user_ip)
     ) $charset_collate;";
 
     require_once(ABSPATH . 'wp-admin/includes/upgrade.php');
@@ -488,12 +423,34 @@ function upt_store_session_data()
 
         $user_ip = $_SERVER['REMOTE_ADDR'];
         $parameters = wp_json_encode($_POST['sessionData']);
+        $current_time = current_time('mysql');
 
-        $wpdb->insert($table_name, array(
-            'user_ip'    => $user_ip,
-            'parameters' => $parameters,
-            'timestamp'  => current_time('mysql'),
-        ));
+        // Check if user IP already exists in the table
+        $existing_record = $wpdb->get_row($wpdb->prepare("SELECT * FROM $table_name WHERE user_ip = %s", $user_ip));
+
+        if ($existing_record) {
+            // Update only the last_touch and last_touch_parameters
+            $wpdb->update(
+                $table_name,
+                array(
+                    'last_touch' => $current_time,
+                    'last_touch_parameters' => $parameters,
+                ),
+                array('user_ip' => $user_ip)
+            );
+        } else {
+            // Insert new record with first and last touch
+            $wpdb->insert(
+                $table_name,
+                array(
+                    'user_ip' => $user_ip,
+                    'first_touch' => $current_time,
+                    'last_touch' => $current_time,
+                    'first_touch_parameters' => $parameters,
+                    'last_touch_parameters' => $parameters,
+                )
+            );
+        }
 
         wp_send_json_success();
     } else {
