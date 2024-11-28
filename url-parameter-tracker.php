@@ -2,7 +2,7 @@
 /*
 Plugin Name: URL Parameter Tracker
 Description: Tracks URL parameters and autofills them into forms.
-Version: 1.0.3
+Version: 1.0.4
 Author: LFMC
 */
 
@@ -342,12 +342,77 @@ function upt_session_data_page()
         <p>This table displays the session data collected from users who visited your site with tracked URL parameters.</p>
 
         <?php
+
+        if (isset($_GET['upt_message'])) {
+            if ($_GET['upt_message'] == 'deleted') {
+                echo '<div class="updated notice is-dismissible"><p>All session data has been deleted.</p></div>';
+            } elseif ($_GET['upt_message'] == 'error') {
+                echo '<div class="error notice is-dismissible"><p>Security check failed. Please try again.</p></div>';
+            }
+        }
+        ?>
+
+        <!-- Delete All Session Data Form -->
+        <form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>">
+            <?php wp_nonce_field('upt_delete_session_data_action', 'upt_delete_session_data_nonce'); ?>
+            <input type="hidden" name="action" value="upt_delete_session_data">
+            <input type="submit" name="delete_session_data" class="button button-secondary" value="Delete All Session Data" onclick="return confirm('Are you sure you want to delete all session data? This action cannot be undone.');">
+        </form>
+
+        <br>
+
+        <?php
+        // Pagination parameters
+        $items_per_page = 10; // Number of items per page
+        $current_page = isset($_GET['paged']) && is_numeric($_GET['paged']) ? intval($_GET['paged']) : 1;
+        $offset = ($current_page - 1) * $items_per_page;
+
         global $wpdb;
         $table_name = $wpdb->prefix . 'upt_sessions';
+
+        // Get total number of items
+        $total_items = $wpdb->get_var("SELECT COUNT(*) FROM $table_name");
+
+        // Calculate total pages
+        $total_pages = ceil($total_items / $items_per_page);
+
+        // Fetch items for current page
+        $results = $wpdb->get_results($wpdb->prepare(
+            "SELECT * FROM $table_name ORDER BY timestamp DESC LIMIT %d OFFSET %d",
+            $items_per_page,
+            $offset
+        ));
 
         // Fetch all session data
         $results = $wpdb->get_results("SELECT * FROM $table_name ORDER BY last_touch DESC");
         ?>
+
+        <!-- Pagination above the table -->
+        <?php if ($total_pages > 1) : ?>
+            <div class="tablenav top">
+                <div class="tablenav-pages">
+                    <?php
+                    $pagination_args = array(
+                        'base'      => add_query_arg('paged', '%#%'),
+                        'format'    => '',
+                        'prev_text' => __('&laquo;'),
+                        'next_text' => __('&raquo;'),
+                        'total'     => $total_pages,
+                        'current'   => $current_page,
+                        'type'      => 'plain',
+                    );
+
+                    // Adjust pagination base if using pretty permalinks
+                    if ($GLOBALS['wp_rewrite']->using_permalinks()) {
+                        $pagination_args['base'] = user_trailingslashit(remove_query_arg('paged', get_pagenum_link(1)), 'paged') . '%_%';
+                        $pagination_args['format'] = 'page/%#%/';
+                    }
+
+                    echo paginate_links($pagination_args);
+                    ?>
+                </div>
+            </div>
+        <?php endif; ?>
 
         <!-- Session Data Table -->
         <table class="widefat fixed striped" cellspacing="0">
@@ -384,6 +449,18 @@ function upt_session_data_page()
                 ?>
             </tbody>
         </table>
+
+        <!-- Pagination below the table -->
+        <?php if ($total_pages > 1) : ?>
+            <div class="tablenav bottom">
+                <div class="tablenav-pages">
+                    <?php
+                    // Reuse the same pagination arguments
+                    echo paginate_links($pagination_args);
+                    ?>
+                </div>
+            </div>
+        <?php endif; ?>
     </div>
 <?php
 }
