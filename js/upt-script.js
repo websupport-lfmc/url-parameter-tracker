@@ -130,11 +130,11 @@ jQuery(document).ready(function ($) {
       var $field = $(fieldSelector);
       if ($field.length) {
         var currentVal = $field.val();
-        var newVal = values.join(",");
+        var newVal = values.join("&");
 
         // If the field already has a value, append to it
         if (currentVal) {
-          newVal = currentVal + "," + newVal;
+          newVal = currentVal + "&" + newVal;
         }
 
         // console.log("Autofilling Field:", fieldSelector, "with value:", newVal);
