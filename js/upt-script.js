@@ -18,15 +18,15 @@ jQuery(document).ready(function ($) {
       line = line.trim();
       if (line === "") return; // Skip empty lines
 
-      // Split only at the first '='
-      var indexOfEqual = line.indexOf("=");
-      if (indexOfEqual === -1) {
-        // console.warn("Invalid mapping line (expected format 'parameter=selector'):", line);
+      // Split only at the first '=>'
+      var indexOfArrow = line.indexOf("=>");
+      if (indexOfArrow === -1) {
+        // console.warn("Invalid mapping line (expected format 'parameter=>selector'):", line);
         return;
       }
 
-      var paramsPart = line.substring(0, indexOfEqual).trim();
-      var fieldSelector = line.substring(indexOfEqual + 1).trim();
+      var paramsPart = line.substring(0, indexOfArrow).trim();
+      var fieldSelector = line.substring(indexOfArrow + 1).trim();
 
       if (!paramsPart || !fieldSelector) {
         // console.warn("Invalid mapping line (empty parameter or selector):", line);
