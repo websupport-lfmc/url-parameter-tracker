@@ -2,7 +2,7 @@
 /*
 Plugin Name: URL Parameter Tracker
 Description: Tracks URL parameters and autofills them into forms.
-Version: 1.0.6
+Version: 1.0.7
 Author: LFMC
 */
 

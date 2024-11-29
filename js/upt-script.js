@@ -107,8 +107,21 @@ jQuery(document).ready(function ($) {
     var values = [];
 
     params.forEach(function (param) {
-      var value = getCookie("upt_" + param);
+      var label = "";
+      var paramName = param;
+
+      // Check if param has a label in the format {Label Text}paramName
+      var labelMatch = param.match(/^\{([^}]+)\}(.*)$/);
+      if (labelMatch) {
+        label = labelMatch[1];
+        paramName = labelMatch[2];
+      }
+
+      var value = getCookie("upt_" + paramName);
       if (value) {
+        if (label) {
+          value = label + value;
+        }
         values.push(value);
       }
     });
@@ -117,11 +130,11 @@ jQuery(document).ready(function ($) {
       var $field = $(fieldSelector);
       if ($field.length) {
         var currentVal = $field.val();
-        var newVal = values.join(", ");
+        var newVal = values.join(",");
 
         // If the field already has a value, append to it
         if (currentVal) {
-          newVal = currentVal + ", " + newVal;
+          newVal = currentVal + "," + newVal;
         }
 
         // console.log("Autofilling Field:", fieldSelector, "with value:", newVal);
