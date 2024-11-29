@@ -26,7 +26,7 @@ jQuery(document).ready(function ($) {
       }
 
       var paramsPart = line.substring(0, indexOfArrow).trim();
-      var fieldSelector = line.substring(indexOfArrow + 1).trim();
+      var fieldSelector = line.substring(indexOfArrow + 2).trim();
 
       if (!paramsPart || !fieldSelector) {
         // console.warn("Invalid mapping line (empty parameter or selector):", line);
